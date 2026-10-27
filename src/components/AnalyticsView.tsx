@@ -1,81 +1,108 @@
 import React from 'react';
-import { BarChart3, TrendingUp, DollarSign, MapPin, Users, Award, FileText } from 'lucide-react';
-import { Trip, Employee, Activity, TripReport } from '../types';
+import { BarChart3, TrendingUp, DollarSign, MapPin, Users, FileText, Camera } from 'lucide-react';
+import { Trip, Employee, Activity } from '../types';
 
 interface AnalyticsViewProps {
   trips: Trip[];
   employees: Employee[];
   activities: Activity[];
-  reports: TripReport[];
 }
 
 export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   trips,
   employees,
-  activities,
-  reports
+  activities
 }) => {
   const totalBudget = activities.reduce((sum, a) => sum + a.pagu, 0);
-  const totalRealized = activities.reduce((sum, a) => sum + a.realized, 0);
-  const totalTripCost = trips.reduce((sum, t) => sum + t.totalCost, 0);
+  const totalTripCost = trips.reduce((sum, t) => {
+    return sum + t.personnel.reduce((pSum, p) => pSum + p.total, 0);
+  }, 0);
 
   const formatIDR = (amount: number) => {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
   };
 
-  // Calculate destination counts
   const destinationCounts: { [key: string]: number } = {};
   trips.forEach(t => {
-    const mainArea = t.destination.split(' ')[0] + ' ' + (t.destination.split(' ')[1] || '');
-    destinationCounts[mainArea] = (destinationCounts[mainArea] || 0) + 1;
+    destinationCounts[t.tempatTugas] = (destinationCounts[t.tempatTugas] || 0) + 1;
   });
 
   return (
     <div className="space-y-6 pb-12">
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <h2 className="text-xl font-extrabold text-slate-900">Visualisasi & Analitik Perjalanan Dinas</h2>
-        <p className="text-xs text-slate-500">Statistik penyerapan anggaran, distribusi wilayah tujuan, dan rekapitulasi penugasan Bidang SDA</p>
+        <h2 className="text-xl font-extrabold text-slate-900">Visualisasi & Laporan Data Lapangan</h2>
+        <p className="text-xs text-slate-500">
+          Statistik penugasan perjalanan dinas, data visual dokumentasi lapangan, dan serapan anggaran Bidang SDA
+        </p>
       </div>
 
       {/* Top Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-blue-900 to-indigo-900 text-white p-6 rounded-2xl shadow-md">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-semibold text-blue-200 uppercase tracking-wider">Total Pagu Anggaran SDA</span>
-            <DollarSign className="w-5 h-5 text-blue-400" />
+        <div className="bg-gradient-to-br from-slate-900 to-blue-950 text-white p-6 rounded-2xl shadow-md border border-blue-900/40">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold text-blue-200 uppercase tracking-wider">Total Pagu DPA SDA</span>
+            <DollarSign className="w-5 h-5 text-yellow-400" />
           </div>
           <div className="text-2xl font-extrabold mb-1">{formatIDR(totalBudget)}</div>
-          <p className="text-xs text-blue-200">Tahun Anggaran 2026</p>
+          <p className="text-xs text-blue-200">T.A. 2026 Dinas PUPR Kab. Nagekeo</p>
         </div>
 
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Biaya Perjalanan Dinas</span>
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Belanja Perjalanan Dinas</span>
+            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
               <TrendingUp className="w-5 h-5" />
             </div>
           </div>
           <div className="text-2xl font-bold text-slate-900 mb-1">{formatIDR(totalTripCost)}</div>
-          <p className="text-xs text-emerald-600 font-medium">{trips.length} Dokumen SPT diterbitkan</p>
+          <p className="text-xs text-emerald-600 font-medium">{trips.length} Berkas Surat Tugas Diterbitkan</p>
         </div>
 
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Laporan Hasil Selesai</span>
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
-              <FileText className="w-5 h-5" />
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Dokumentasi Visual Tersimpan</span>
+            <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+              <Camera className="w-5 h-5" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-slate-900 mb-1">{reports.length} Laporan</div>
-          <p className="text-xs text-indigo-600 font-medium">Dokumentasi & rekomendasi lapangan</p>
+          <div className="text-2xl font-bold text-slate-900 mb-1">
+            {trips.reduce((acc, t) => acc + (t.visualPhotos?.length || 0), 0)} Foto
+          </div>
+          <p className="text-xs text-purple-600 font-medium">Lengkap timestamp & koordinat GPS</p>
         </div>
       </div>
 
-      {/* Charts & Breakdown Grid */}
+      {/* Visual Photos Gallery from Field */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 className="text-base font-bold text-slate-900">Galeri Data Visual Hasil Survey Lapangan</h3>
+            <p className="text-xs text-slate-500">Lampiran foto dokumentasi fisik lapangan bergeotag</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+          {trips.flatMap(t => t.visualPhotos || []).map((photo, idx) => (
+            <div key={idx} className="border border-slate-200 rounded-xl overflow-hidden shadow-sm group">
+              <div className="h-44 overflow-hidden bg-slate-100">
+                <img 
+                  src={photo.url} 
+                  alt={photo.caption} 
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+              <div className="p-3 bg-white text-[11px] font-mono text-slate-700 leading-tight">
+                {photo.caption}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Charts & Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Activity Budget Progress */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-          <h3 className="text-base font-bold text-slate-900">Penyerapan Anggaran per Kegiatan (MAK)</h3>
+          <h3 className="text-base font-bold text-slate-900">Realisasi per Kegiatan (MAK)</h3>
           <div className="space-y-4 pt-2">
             {activities.map((act) => {
               const pct = act.pagu > 0 ? Math.round((act.realized / act.pagu) * 100) : 0;
@@ -98,35 +125,20 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           </div>
         </div>
 
-        {/* Destination Distribution */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-          <h3 className="text-base font-bold text-slate-900">Distribusi Wilayah Tujuan Perjalanan</h3>
+          <h3 className="text-base font-bold text-slate-900">Distribusi Wilayah Tujuan Penugasan</h3>
           <div className="space-y-3 pt-2">
             {Object.entries(destinationCounts).map(([dest, count], idx) => (
-              <div key={idx} className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">
-                    <MapPin className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-slate-800 text-sm">{dest}</h4>
-                    <p className="text-xs text-slate-500">Wilayah Kerja Kabupaten Nagekeo</p>
-                  </div>
+              <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs">
+                <div className="flex items-center gap-2.5">
+                  <MapPin className="w-4 h-4 text-rose-500" />
+                  <span className="font-bold text-slate-800">{dest}</span>
                 </div>
-                <div className="text-right">
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-600 text-white">
-                    {count} Perjalanan
-                  </span>
-                </div>
+                <span className="px-2.5 py-1 rounded-full font-bold bg-blue-600 text-white text-[11px]">
+                  {count} Penugasan
+                </span>
               </div>
             ))}
-          </div>
-
-          <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-xl mt-4">
-            <h4 className="text-xs font-bold text-indigo-900 uppercase mb-1">Catatan Pengawasan SDA</h4>
-            <p className="text-xs text-indigo-800 leading-relaxed">
-              Sebagian besar perjalanan dinas difokuskan pada pengawasan pembangunan jaringan irigasi primer dan sekunder di Kecamatan Aesesa dan Boawae untuk mendukung kedaulatan pangan Kabupaten Nagekeo.
-            </p>
           </div>
         </div>
       </div>

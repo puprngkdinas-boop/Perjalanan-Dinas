@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, X, Plus, Trash2, CheckCircle2 } from 'lucide-react';
+import { FileText, Trash2, CheckCircle2 } from 'lucide-react';
 import { Trip, TripReport, Employee, Activity } from '../types';
 
 interface TripReportModalProps {
@@ -19,20 +19,20 @@ export const TripReportModal: React.FC<TripReportModalProps> = ({
   onSaveReport,
   onClose
 }) => {
-  const employee = employees.find(e => e.id === trip.employeeId);
-  const activity = activities.find(a => a.id === trip.activityId);
+  const leadEmpId = trip.personnel[0]?.employeeId;
+  const employee = employees.find(e => e.id === leadEmpId);
 
-  const [summary, setSummary] = useState(existingReport?.summary || '');
+  const [summary, setSummary] = useState(existingReport?.summary || trip.hasilPerjalananDinas || '');
   const [findings, setFindings] = useState<string[]>(
-    existingReport?.findings || [
-      'Pekerjaan di lapangan berjalan sesuai dengan spesifikasi teknis.',
-      'Koordinasi dengan pihak desa dan kelompok pemakai air berjalan lancar.'
+    existingReport?.findings || trip.hasilTemuan || [
+      'Pekerjaan di lapangan berjalan sesuai dengan spesifikasi teknis rencana anggaran biaya (RAB).',
+      'Data pendugaan geolistrik dan pengukuran lapangan terlampir lengkap.'
     ]
   );
   const [recommendations, setRecommendations] = useState<string[]>(
     existingReport?.recommendations || [
       'Dilakukan monitoring lanjutan secara berkala.',
-      'Penyedia jasa diminta mempercepat progres fisik sesuai tenggat waktu.'
+      'Menyampaikan laporan hasil pendugaan geolistrik kepada Kepala Dinas PUPR.'
     ]
   );
   const [newFinding, setNewFinding] = useState('');
@@ -66,9 +66,7 @@ export const TripReportModal: React.FC<TripReportModalProps> = ({
       summary,
       findings,
       recommendations,
-      photos: existingReport?.photos || [
-        'https://images.unsplash.com/photo-1541888946425-d0fbb18f191d?auto=format&fit=crop&q=80&w=800'
-      ],
+      photos: existingReport?.photos || trip.visualPhotos?.map(p => p.url) || [],
       submittedAt: new Date().toISOString().split('T')[0]
     };
     onSaveReport(reportData);
@@ -88,18 +86,18 @@ export const TripReportModal: React.FC<TripReportModalProps> = ({
               <p className="text-xs text-slate-500 font-mono">SPT: {trip.sptNumber}</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-xl font-bold cursor-pointer">&times;</button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-1">
-            <p><span className="font-semibold">Pelaksana:</span> {employee?.name} ({employee?.position})</p>
-            <p><span className="font-semibold">Tujuan:</span> {trip.destination}</p>
-            <p><span className="font-semibold">Keperluan:</span> {trip.purpose}</p>
+            <p><span className="font-semibold">Pelaksana:</span> {employee?.name} ({employee?.position}) dkk</p>
+            <p><span className="font-semibold">Tujuan:</span> {trip.tempatTugas}</p>
+            <p><span className="font-semibold">Keperluan:</span> {trip.maksudPerjalanan}</p>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Ringkasan Eksekutif Pelaksanaan</label>
+            <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Ringkasan Pelaksanaan</label>
             <textarea
               required
               rows={3}
@@ -116,7 +114,7 @@ export const TripReportModal: React.FC<TripReportModalProps> = ({
               {findings.map((f, i) => (
                 <div key={i} className="flex items-center justify-between bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 text-xs">
                   <span>{i + 1}. {f}</span>
-                  <button type="button" onClick={() => handleRemoveFinding(i)} className="text-rose-500 hover:text-rose-700">
+                  <button type="button" onClick={() => handleRemoveFinding(i)} className="text-rose-500 hover:text-rose-700 cursor-pointer">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -133,7 +131,7 @@ export const TripReportModal: React.FC<TripReportModalProps> = ({
               <button
                 type="button"
                 onClick={handleAddFinding}
-                className="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-800"
+                className="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-800 cursor-pointer"
               >
                 Tambah
               </button>
@@ -146,7 +144,7 @@ export const TripReportModal: React.FC<TripReportModalProps> = ({
               {recommendations.map((rec, i) => (
                 <div key={i} className="flex items-center justify-between bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 text-xs">
                   <span>{i + 1}. {rec}</span>
-                  <button type="button" onClick={() => handleRemoveRec(i)} className="text-rose-500 hover:text-rose-700">
+                  <button type="button" onClick={() => handleRemoveRec(i)} className="text-rose-500 hover:text-rose-700 cursor-pointer">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -163,7 +161,7 @@ export const TripReportModal: React.FC<TripReportModalProps> = ({
               <button
                 type="button"
                 onClick={handleAddRec}
-                className="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-800"
+                className="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-800 cursor-pointer"
               >
                 Tambah
               </button>
@@ -174,16 +172,16 @@ export const TripReportModal: React.FC<TripReportModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200"
+              className="px-4 py-2 rounded-xl text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer"
             >
               Batal
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl text-sm font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-md flex items-center gap-2"
+              className="px-5 py-2 rounded-xl text-sm font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-md flex items-center gap-2 cursor-pointer"
             >
               <CheckCircle2 className="w-4 h-4" />
-              <span>Simpan & Terbitkan Laporan</span>
+              <span>Simpan Laporan</span>
             </button>
           </div>
         </form>
